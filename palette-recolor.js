@@ -17,8 +17,6 @@
 
   // Map luma to nearest of the 8 exact grayscale levels used by assets
   const LEVELS = [0, 32, 64, 96, 128, 160, 192, 255];
-  const TRIM_LEVELS = [32, 64, 96, 128];
-  function nearestTrim(y){ let best=32, md=1e9; for(const v of TRIM_LEVELS){ const d=Math.abs(y-v); if(d<md){md=d; best=v;} } return {v:best, d:md}; }
   function bandForLuma(y){
     let idx=0, min=1e9;
     for(let i=0;i<LEVELS.length;i++){ const d=Math.abs(y-LEVELS[i]); if(d<min){min=d; idx=i;} }
@@ -68,13 +66,6 @@
 
   function getLuma(r,g,b){ return Math.round(0.2126*r + 0.7152*g + 0.0722*b); }
 
-  // A better measure for how colorful a pixel is, less sensitive to lightness than saturation.
-  function colorfulness(r, g, b) {
-    const rg = Math.abs(r - g);
-    const yb = Math.abs(0.5 * (r + g) - b);
-    return Math.sqrt(rg * rg + yb * yb);
-  }
-
   async function paletteRecolor(img, character, slotColorName, returnBlob=true){
     return new Promise(resolve=>{
       const run=()=>{
@@ -89,44 +80,8 @@
             const a=p[i+3]; if(a<5) continue;
             const r=p[i], g=p[i+1], b=p[i+2]; const y=getLuma(r,g,b);
             const hsl=rgbToHsl(r,g,b);
-            // neighborhood gradient guard (avoid shiny metal speculars)
-            const px=(i/4)%c.width, py=Math.floor((i/4)/c.width);
-            const idx=(x,y)=>((y*c.width+x)<<2);
-            const yL=px>0?getLuma(p[idx(px-1,py)],p[idx(px-1,py)+1],p[idx(px-1,py)+2]):y;
-            const yR=px<c.width-1?getLuma(p[idx(px+1,py)],p[idx(px+1,py)+1],p[idx(px+1,py)+2]):y;
-            const yU=py>0?getLuma(p[idx(px,py-1)],p[idx(px,py-1)+1],p[idx(px,py-1)+2]):y;
-            const yD=py<c.height-1?getLuma(p[idx(px,py+1)],p[idx(px,py+1)+1],p[idx(px,py+1)+2]):y;
-            const grad = Math.abs(y-yL)+Math.abs(y-yR)+Math.abs(y-yU)+Math.abs(y-yD);
-            const near=nearestTrim(y);
-            
-            // --- REFINED RECOLOR LOGIC ---
-            const tol = y < 90 ? 18 : (y < 130 ? 14 : 12); // Widen tolerance for darker/medium grays
-            
-            // Check if the pixel is gray enough using colorfulness and saturation
-            const isGrayish = colorfulness(r,g,b) < 30 && hsl.s < 0.20;
-
-            // Guard against miscoloring parts of the steel armor that might be gray-ish
-            const isBlueSteel = (hsl.s > 0.05 && hsl.s < 0.25 && hsl.h > 190 && hsl.h < 270);
-            const isWarmSteel = (hsl.s > 0.05 && hsl.s < 0.30 && hsl.h > 20 && hsl.h < 60);
-            
-            // Guard against very bright specular highlights and very dark shadows (hair)
-            const silverGuard = (y > 210 && hsl.s < 0.12);
-            const hairGuard = (y < 10);
-            
-            if (isGrayish && near.d <= tol && grad < 64 && !silverGuard && !hairGuard && !isBlueSteel && !isWarmSteel) {
-              const band = bandForLuma(near.v); const tgt=slotShadeColor(hue, band);
-              const within = Math.max(0, Math.min(1, (y - (near.v-16)) / 32)); // position inside band
-              const lightBoost = (within-0.5)*0.18; // preserve highlight/shadow across the band
-              
-              // Softer blend based on distance from the ideal gray value
-              const w = Math.exp(-(near.d * near.d) / (2 * 12 * 12)); 
-              
-              const rr = Math.round(tgt.r*(1+lightBoost));
-              const gg = Math.round(tgt.g*(1+lightBoost));
-              const bb = Math.round(tgt.b*(1+lightBoost));
-              
-              p[i]=lerp(r, rr, w); p[i+1]=lerp(g, gg, w); p[i+2]=lerp(b, bb, w);
-            }
+            const band=bandForLuma(y);
+            if (hsl.s < 0.12 && band>=1 && band<=4){ const tgt=slotShadeColor(hue, band); const w=Math.max(0, 1 - Math.abs(y-LEVELS[band])/22); p[i]=lerp(r,tgt.r,w); p[i+1]=lerp(g,tgt.g,w); p[i+2]=lerp(b,tgt.b,w); }
           }
           x.putImageData(d,0,0);
           c.toBlob(blob=>{
