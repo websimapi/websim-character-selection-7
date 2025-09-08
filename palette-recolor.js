@@ -68,6 +68,13 @@
 
   function getLuma(r,g,b){ return Math.round(0.2126*r + 0.7152*g + 0.0722*b); }
 
+  // A better measure for how colorful a pixel is, less sensitive to lightness than saturation.
+  function colorfulness(r, g, b) {
+    const rg = Math.abs(r - g);
+    const yb = Math.abs(0.5 * (r + g) - b);
+    return Math.sqrt(rg * rg + yb * yb);
+  }
+
   async function paletteRecolor(img, character, slotColorName, returnBlob=true){
     return new Promise(resolve=>{
       const run=()=>{
@@ -91,19 +98,33 @@
             const yD=py<c.height-1?getLuma(p[idx(px,py+1)],p[idx(px,py+1)+1],p[idx(px,py+1)+2]):y;
             const grad = Math.abs(y-yL)+Math.abs(y-yR)+Math.abs(y-yU)+Math.abs(y-yD);
             const near=nearestTrim(y);
-            const tol = y<90?18 : y<130?14 : 12; // widened tolerance for darker/medium greys
-            const neutralish = (Math.abs(r-g)<14 && Math.abs(g-b)<14 && hsl.s<0.28) || (hsl.s<0.18);
-            const blueSteelDrift = (y>135 && y<205 && hsl.s<0.22 && (hsl.h>190 && hsl.h<270));
-            const silverGuard = (y>210 && hsl.s<0.12); // keep very bright speculars un-tinted
-            const hairGuard = (y<10);
-            if((neutralish || blueSteelDrift) && near.d<=tol && grad<64 && !silverGuard && !hairGuard){
+            
+            // --- REFINED RECOLOR LOGIC ---
+            const tol = y < 90 ? 18 : (y < 130 ? 14 : 12); // Widen tolerance for darker/medium grays
+            
+            // Check if the pixel is gray enough using colorfulness and saturation
+            const isGrayish = colorfulness(r,g,b) < 30 && hsl.s < 0.20;
+
+            // Guard against miscoloring parts of the steel armor that might be gray-ish
+            const isBlueSteel = (hsl.s > 0.05 && hsl.s < 0.25 && hsl.h > 190 && hsl.h < 270);
+            const isWarmSteel = (hsl.s > 0.05 && hsl.s < 0.30 && hsl.h > 20 && hsl.h < 60);
+            
+            // Guard against very bright specular highlights and very dark shadows (hair)
+            const silverGuard = (y > 210 && hsl.s < 0.12);
+            const hairGuard = (y < 10);
+            
+            if (isGrayish && near.d <= tol && grad < 64 && !silverGuard && !hairGuard && !isBlueSteel && !isWarmSteel) {
               const band = bandForLuma(near.v); const tgt=slotShadeColor(hue, band);
               const within = Math.max(0, Math.min(1, (y - (near.v-16)) / 32)); // position inside band
               const lightBoost = (within-0.5)*0.18; // preserve highlight/shadow across the band
-              const w = Math.exp(-(near.d*near.d)/(2*22*22)); // softer blend by distance
+              
+              // Softer blend based on distance from the ideal gray value
+              const w = Math.exp(-(near.d * near.d) / (2 * 12 * 12)); 
+              
               const rr = Math.round(tgt.r*(1+lightBoost));
               const gg = Math.round(tgt.g*(1+lightBoost));
               const bb = Math.round(tgt.b*(1+lightBoost));
+              
               p[i]=lerp(r, rr, w); p[i+1]=lerp(g, gg, w); p[i+2]=lerp(b, bb, w);
             }
           }
