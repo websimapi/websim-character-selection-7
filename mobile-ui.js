@@ -86,6 +86,7 @@ function updatePlayerChip(slotIndex, direction = 'fade') {
         setTimeout(()=>{ oldImg.remove(); newImg.style.opacity=''; newImg.classList.remove('slide-in-from-left','slide-in-from-right'); }, 500);
     }
     try { playSound(stoneShiftBuffer); } catch(e) {}
+    // Hair tint for chips not applied to keep chips lightweight on mobile
 }
 
 function colorizeChipImage(img, character, colorName) {

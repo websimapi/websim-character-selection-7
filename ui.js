@@ -91,6 +91,28 @@ function initializeCharacterSelection() {
             if (playerSlots[index]?.occupied) return;
             requestSlotSwitch(index);
         });
+
+        // Hair color picker UI
+        if (!slot.querySelector('.hair-color-btn')) {
+            const btn = document.createElement('button');
+            btn.className = 'hair-color-btn';
+            btn.title = 'Hair Color';
+            btn.textContent = '🎨';
+            const input = document.createElement('input');
+            input.type = 'color'; input.style.display = 'none';
+            if (!playerSlots[index].hairColor) {
+                playerSlots[index].hairColor = hueToHex(slotColors[slot.dataset.color] || 240, 0.8, 0.25);
+            }
+            input.value = playerSlots[index].hairColor;
+            btn.addEventListener('click', () => input.click());
+            input.addEventListener('input', () => {
+                playerSlots[index].hairColor = input.value;
+                const img = slot.querySelector('.character-image');
+                if (img) applyHairTintToImage(img, input.value);
+            });
+            slot.querySelector('.character-frame').appendChild(btn);
+            slot.querySelector('.character-frame').appendChild(input);
+        }
     });
     setupMobileSlotPicker();
 }

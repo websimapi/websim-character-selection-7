@@ -79,7 +79,15 @@ function updateCharacterSlot(slot, character, direction) {
 
     // If we used a fallback, apply shader (should be rare after preloading)
     if (!cachedSrc) {
-        applyColorShaderToImage(newImage, color);
+        applyColorShaderToImage(newImage, color).then(() => {
+            const slotIdx = parseInt(slot.dataset.player,10)-1;
+            const hairHex = playerSlots[slotIdx]?.hairColor || hueToHex(slotColors[color]||240,0.8,0.25);
+            applyHairTintToImage(newImage, hairHex);
+        });
+    } else {
+        const slotIdx = parseInt(slot.dataset.player,10)-1;
+        const hairHex = playerSlots[slotIdx]?.hairColor || hueToHex(slotColors[color]||240,0.8,0.25);
+        applyHairTintToImage(newImage, hairHex);
     }
 
     // Animate old image out (guard if none)

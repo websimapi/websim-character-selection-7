@@ -109,3 +109,11 @@ function hslToRgb(h, s, l) {
     const m = l - c/2;
     return { r: Math.round((r1+m)*255), g: Math.round((g1+m)*255), b: Math.round((b1+m)*255) };
 }
+
+function rgbToHex(r,g,b){ 
+    return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join(''); 
+}
+function hueToHex(h, s=0.8, l=0.25){ 
+    const {r,g,b}=hslToRgb(h,s,l); 
+    return rgbToHex(r,g,b); 
+}

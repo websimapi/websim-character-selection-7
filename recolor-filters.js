@@ -240,3 +240,38 @@ function selectiveRecolorWizard(img, targetHue, returnBlob = false) {
         if (img.complete && img.naturalWidth) process(); else img.addEventListener('load', process, { once: true });
     });
 }
+
+async function applyHairTintToImage(img, hex){
+    return new Promise(resolve=>{
+        const run=()=>{
+            try{
+                const c=document.createElement('canvas'), x=c.getContext('2d',{willReadFrequently:true});
+                c.width=img.naturalWidth; c.height=img.naturalHeight; x.drawImage(img,0,0);
+                const d=x.getImageData(0,0,c.width,c.height), p=d.data;
+                const toRgb=(h)=>({r:parseInt(h.slice(1,3),16),g:parseInt(h.slice(3,5),16),b:parseInt(h.slice(5,7),16)});
+                const tgt=toRgb(hex);
+                for(let i=0;i<p.length;i+=4){
+                    const a=p[i+3]; if(a<5) continue;
+                    const r=p[i], g=p[i+1], b=p[i+2];
+                    const {h,s,l}=rgbToHsl(r,g,b);
+                    const y=0.2126*r+0.7152*g+0.0722*b;
+                    if (y<42 && s<0.30) { // target near-black, low-chroma hair
+                        const tL = Math.min(0.38, Math.max(0.06, y/255*0.45)); // preserve shading
+                        const col=hslToRgb(rgbToHsl(tgt.r,tgt.g,tgt.b).h, 0.85, tL);
+                        p[i]=col.r; p[i+1]=col.g; p[i+2]=col.b;
+                    }
+                }
+                x.putImageData(d,0,0);
+                c.toBlob(b=>{
+                    if (b){
+                        if (img.dataset.blobUrlHair) URL.revokeObjectURL(img.dataset.blobUrlHair);
+                        const url=URL.createObjectURL(b); img.dataset.blobUrlHair=url; img.src=url;
+                    }
+                    resolve();
+                });
+            }catch(e){ console.warn('[HairTint] Failed', e); resolve(); }
+        };
+        if (img.complete && img.naturalWidth) run(); else img.addEventListener('load', run, {once:true});
+    });
+}
+window.applyHairTintToImage = applyHairTintToImage;
