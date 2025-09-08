@@ -91,14 +91,20 @@
             const yD=py<c.height-1?getLuma(p[idx(px,py+1)],p[idx(px,py+1)+1],p[idx(px,py+1)+2]):y;
             const grad = Math.abs(y-yL)+Math.abs(y-yR)+Math.abs(y-yU)+Math.abs(y-yD);
             const near=nearestTrim(y);
-            const tol = y<90?14 : y<130?12 : 8; // be more lenient in darker bands
-            const neutral = (Math.abs(r-g)<10 && Math.abs(g-b)<10 && hsl.s<0.18);
-            const silverGuard = (y>150) && !(Math.abs(y-128)<=8 && hsl.s<0.08);
+            const tol = y<90?18 : y<130?14 : 12; // widened tolerance for darker/medium greys
+            const neutralish = (Math.abs(r-g)<14 && Math.abs(g-b)<14 && hsl.s<0.28) || (hsl.s<0.18);
+            const blueSteelDrift = (y>135 && y<205 && hsl.s<0.22 && (hsl.h>190 && hsl.h<270));
+            const silverGuard = (y>210 && hsl.s<0.12); // keep very bright speculars un-tinted
             const hairGuard = (y<10);
-            if(neutral && near.d<=tol && grad<50 && !silverGuard && !hairGuard){
+            if((neutralish || blueSteelDrift) && near.d<=tol && grad<64 && !silverGuard && !hairGuard){
               const band = bandForLuma(near.v); const tgt=slotShadeColor(hue, band);
-              const w = Math.exp(-(near.d*near.d)/(2*18*18)); // soft blend by distance
-              p[i]=lerp(r,tgt.r,w); p[i+1]=lerp(g,tgt.g,w); p[i+2]=lerp(b,tgt.b,w);
+              const within = Math.max(0, Math.min(1, (y - (near.v-16)) / 32)); // position inside band
+              const lightBoost = (within-0.5)*0.18; // preserve highlight/shadow across the band
+              const w = Math.exp(-(near.d*near.d)/(2*22*22)); // softer blend by distance
+              const rr = Math.round(tgt.r*(1+lightBoost));
+              const gg = Math.round(tgt.g*(1+lightBoost));
+              const bb = Math.round(tgt.b*(1+lightBoost));
+              p[i]=lerp(r, rr, w); p[i+1]=lerp(g, gg, w); p[i+2]=lerp(b, bb, w);
             }
           }
           x.putImageData(d,0,0);
