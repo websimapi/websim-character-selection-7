@@ -1,0 +1,195 @@
+/* Mobile optimizations for both portrait and landscape */
+@media (max-width: 900px) {
+    .character-selection {
+        padding: 10px 0;
+    }
+
+    body.mobile.mobile-single-slot .character-selection {
+        padding: 0;
+        justify-content: flex-start;
+    }
+
+    .characters-grid {
+        gap: 2vw;
+        padding: 0 2vw;
+    }
+
+    .character-slot {
+        flex: 1 1 22%;
+        min-width: 150px;
+        max-width: 200px;
+    }
+
+    .title {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        margin-top: 0.5rem;
+    }
+    
+    .instructions {
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+    }
+
+    /* Better touch targets for mobile */
+    .arrow {
+        padding: 8px 12px;
+        font-size: 1.4rem;
+    }
+
+    .gender-toggle {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+}
+
+/* Portrait mobile optimization */
+@media (max-width: 768px) and (orientation: portrait) {
+    .characters-grid {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 3vw;
+        overflow-x: visible;
+        overflow-y: auto;
+        scroll-snap-type: none;
+    }
+
+    .character-slot {
+        flex: 1 1 45%;
+        min-width: 140px;
+        max-width: 160px;
+        margin-bottom: 1rem;
+    }
+
+    .title {
+        font-size: 2.2rem;
+        margin-bottom: 0.8rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .host-qr-mini {
+        position: fixed;
+        top: 0px;
+        right: 10px;
+        transform: none;
+    }
+    .host-qr-mini canvas {
+        width: 50px !important;
+        height: 50px !important;
+    }
+
+    .title {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        display: none; /* Hide on mobile */
+    }
+    
+    .character-name {
+        font-size: 1rem;
+    }
+
+    .character-name-container {
+        width: 100%;
+        max-width: none;
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+
+    .player-indicator {
+        font-size: 0.7rem;
+    }
+
+    .instructions {
+        margin-top: 1rem;
+        font-size: 1rem;
+    }
+
+    .select-character-text {
+        font-size: 0.9rem;
+    }
+    
+    .character-stats div {
+        font-size: 0.7rem;
+    }
+
+    /* Improved mobile start overlay */
+    .start-title {
+        font-size: 3rem;
+    }
+
+    .mode-btn {
+        font-size: 1.1rem;
+        padding: 10px 20px;
+    }
+}
+
+@media (max-width: 640px) {
+    .character-slot {
+        flex: 1 1 42%;
+        min-width: 130px;
+        max-width: 150px;
+    }
+
+    .characters-grid {
+        gap: 2vw;
+    }
+
+    .character-name {
+        font-size: 0.9rem;
+    }
+
+    .player-indicator {
+        font-size: 0.6rem;
+    }
+
+    .select-character-text {
+        font-size: 0.8rem;
+    }
+    
+    .character-stats div {
+        font-size: 0.6rem;
+    }
+
+    .start-title {
+        font-size: 2.5rem;
+    }
+}
+
+/* Small portrait screens */
+@media (max-width: 480px) and (orientation: portrait) {
+    .characters-grid {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .character-slot {
+        flex: none;
+        width: 80%;
+        max-width: 250px;
+        height: 300px;
+    }
+
+    .title {
+        font-size: 1.8rem;
+    }
+}
+
+@media (max-width: 768px) {
+  body.mobile.mobile-single-slot .players-strip { display: flex; }
+  body.mobile.mobile-single-slot .characters-grid { overflow: visible; padding: 0; }
+  body.mobile.mobile-single-slot .characters-grid-container {
+      height: 100%;
+  }
+  body.mobile.mobile-single-slot .character-slot { display: none; }
+  body.mobile.mobile-single-slot .character-slot.own-slot {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      flex: 1 1 auto;
+  }
+}

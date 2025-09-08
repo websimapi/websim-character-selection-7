@@ -1,0 +1,27 @@
+#custom-cursor {
+    position: fixed; width: 32px; height: 32px;
+    background: url('/relic_cursor.png') no-repeat center/contain;
+    pointer-events: none; z-index: 10000; transform: translate(-16px, -2px);
+    opacity: 0; transition: opacity .15s ease;
+}
+
+#custom-cursor::after {
+    content: ""; position: absolute; left: 50%; top: 50%;
+    width: 16px; height: 16px; transform: translate(-50%, calc(-50% + 3px));
+    border-radius: 50%; opacity: 0; transition: opacity .12s ease;
+    background:
+      conic-gradient(from 0deg, rgba(102,199,255,0.0) 0 60deg, rgba(102,199,255,0.25) 90deg, rgba(102,199,255,0.0) 120deg),
+      radial-gradient(circle, rgba(102,199,255,0.55) 0%, rgba(102,199,255,0.35) 55%, rgba(102,199,255,0.0) 80%);
+    background-blend-mode: screen;
+    filter: drop-shadow(0 0 6px rgba(102,199,255,0.6));
+}
+
+#custom-cursor.active::after { opacity: 1; animation: cursorGlowSpiral 2.4s linear infinite; }
+
+#custom-cursor.cooldown::after {
+    background:
+      conic-gradient(from 0deg, rgba(180,180,180,0.0) 0 60deg, rgba(180,180,180,0.28) 90deg, rgba(180,180,180,0.0) 120deg),
+      radial-gradient(circle, rgba(200,200,200,0.55) 0%, rgba(180,180,180,0.35) 55%, rgba(180,180,180,0.0) 80%);
+    filter: drop-shadow(0 0 10px rgba(180,180,180,0.7));
+}
+
