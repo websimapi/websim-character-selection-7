@@ -17,6 +17,8 @@
 
   // Map luma to nearest of the 8 exact grayscale levels used by assets
   const LEVELS = [0, 32, 64, 96, 128, 160, 192, 255];
+  const TRIM_LEVELS = [32, 64, 96, 128];
+  function nearestTrim(y){ let best=32, md=1e9; for(const v of TRIM_LEVELS){ const d=Math.abs(y-v); if(d<md){md=d; best=v;} } return {v:best, d:md}; }
   function bandForLuma(y){
     let idx=0, min=1e9;
     for(let i=0;i<LEVELS.length;i++){ const d=Math.abs(y-LEVELS[i]); if(d<min){min=d; idx=i;} }
@@ -80,11 +82,24 @@
             const a=p[i+3]; if(a<5) continue;
             const r=p[i], g=p[i+1], b=p[i+2]; const y=getLuma(r,g,b);
             const hsl=rgbToHsl(r,g,b);
-            const band=bandForLuma(y);
-            const neutral = (Math.abs(r-g)<8 && Math.abs(g-b)<8 && hsl.s < 0.18);
-            const isTrimBand = (band>=1 && band<=4);
-            const exclude = (y<8) || Math.abs(y-28)<10 || Math.abs(y-170)<10; // 000000 hair, 1C1C1C, AAAAAA
-            if (neutral && isTrimBand && !exclude){ const tgt=slotShadeColor(hue, band); const dy=(y-LEVELS[band]); const w=Math.exp(-(dy*dy)/(2*16*16)); p[i]=lerp(r,tgt.r,w); p[i+1]=lerp(g,tgt.g,w); p[i+2]=lerp(b,tgt.b,w); }
+            // neighborhood gradient guard (avoid shiny metal speculars)
+            const px=(i/4)%c.width, py=Math.floor((i/4)/c.width);
+            const idx=(x,y)=>((y*c.width+x)<<2);
+            const yL=px>0?getLuma(p[idx(px-1,py)],p[idx(px-1,py)+1],p[idx(px-1,py)+2]):y;
+            const yR=px<c.width-1?getLuma(p[idx(px+1,py)],p[idx(px+1,py)+1],p[idx(px+1,py)+2]):y;
+            const yU=py>0?getLuma(p[idx(px,py-1)],p[idx(px,py-1)+1],p[idx(px,py-1)+2]):y;
+            const yD=py<c.height-1?getLuma(p[idx(px,py+1)],p[idx(px,py+1)+1],p[idx(px,py+1)+2]):y;
+            const grad = Math.abs(y-yL)+Math.abs(y-yR)+Math.abs(y-yU)+Math.abs(y-yD);
+            const near=nearestTrim(y);
+            const tol = y<90?14 : y<130?12 : 8; // be more lenient in darker bands
+            const neutral = (Math.abs(r-g)<10 && Math.abs(g-b)<10 && hsl.s<0.18);
+            const silverGuard = (y>150) && !(Math.abs(y-128)<=8 && hsl.s<0.08);
+            const hairGuard = (y<10);
+            if(neutral && near.d<=tol && grad<50 && !silverGuard && !hairGuard){
+              const band = bandForLuma(near.v); const tgt=slotShadeColor(hue, band);
+              const w = Math.exp(-(near.d*near.d)/(2*18*18)); // soft blend by distance
+              p[i]=lerp(r,tgt.r,w); p[i+1]=lerp(g,tgt.g,w); p[i+2]=lerp(b,tgt.b,w);
+            }
           }
           x.putImageData(d,0,0);
           c.toBlob(blob=>{
