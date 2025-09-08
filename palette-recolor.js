@@ -81,7 +81,10 @@
             const r=p[i], g=p[i+1], b=p[i+2]; const y=getLuma(r,g,b);
             const hsl=rgbToHsl(r,g,b);
             const band=bandForLuma(y);
-            if (hsl.s < 0.12 && band>=1 && band<=4){ const tgt=slotShadeColor(hue, band); const w=Math.max(0, 1 - Math.abs(y-LEVELS[band])/22); p[i]=lerp(r,tgt.r,w); p[i+1]=lerp(g,tgt.g,w); p[i+2]=lerp(b,tgt.b,w); }
+            const neutral = (Math.abs(r-g)<8 && Math.abs(g-b)<8 && hsl.s < 0.18);
+            const isTrimBand = (band>=1 && band<=4);
+            const exclude = (y<8) || Math.abs(y-28)<10 || Math.abs(y-170)<10; // 000000 hair, 1C1C1C, AAAAAA
+            if (neutral && isTrimBand && !exclude){ const tgt=slotShadeColor(hue, band); const dy=(y-LEVELS[band]); const w=Math.exp(-(dy*dy)/(2*16*16)); p[i]=lerp(r,tgt.r,w); p[i+1]=lerp(g,tgt.g,w); p[i+2]=lerp(b,tgt.b,w); }
           }
           x.putImageData(d,0,0);
           c.toBlob(blob=>{
