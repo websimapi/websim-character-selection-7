@@ -5,13 +5,13 @@ const characters = [
         name: 'Archer', 
         genders: {
             male: { img: '/character2.png' },
-            female: { img: '/character2_female.png' }
+            female: { img: '/character_archer_female.png' }
         },
         baseHue: 120, 
         stats: { strength: 6, speed: 9, magic: 4, armour: 5 } 
     },
-    { name: 'Wizard', img: '/character3.png', baseHue: 60, stats: { strength: 3, speed: 6, magic: 10, armour: 3 } },
-    { name: 'Valkyrie', img: '/character4.png', baseHue: 0, stats: { strength: 7, speed: 7, magic: 6, armour: 6 } }
+    { name: 'Wizard', img: '/character_wizard.png', baseHue: 60, stats: { strength: 3, speed: 6, magic: 10, armour: 3 } },
+    { name: 'Valkyrie', img: '/character_valkrie.png', baseHue: 0, stats: { strength: 7, speed: 7, magic: 6, armour: 6 } }
 ];
 
 const ANIMATION_DURATION = 500; // ms

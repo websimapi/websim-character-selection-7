@@ -42,6 +42,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Now initialize the rest of the app
     initializeCharacterSelection();
     initializeStartOverlay();
+
+    window.addEventListener('unhandledrejection', (e) => {
+        console.error('Unhandled promise rejection:', e.reason);
+    });
 });
 
 function initializePeerJS() {
